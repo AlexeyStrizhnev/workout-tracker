@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тренировочный дневник</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 0;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .page {
+            display: none;
+            padding: 15px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            font-size: 1.4rem;
+        }
+
+        h3 {
+            margin: 10px 0;
+            font-size: 1.2rem;
+            color: var(--secondary-color);
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #219a52;
+        }
+
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            font-size: 0.8rem;
+            padding: 5px;
+        }
+
+        .nav-item.active {
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .exercise-item,
+        .set-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+
+        .set-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .stats-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .db-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .date-picker {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .date-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            padding: 5px 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 0;
+            color: #777;
+        }
+
+        /* SVG иконки */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+    </style>
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#3498db">
+
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+
+    <!-- Viewport для PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Тренировочный дневник</h1>
+        </header>
+
+        <!-- Страница 1: Тренировка на сегодня -->
+        <div id="page-today" class="page active">
+            <div class="card">
+                <h2>Тренировка на сегодня</h2>
+                <div id="today-workout">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница 2: Добавление тренировки -->
+        <div id="page-add" class="page">
+            <div class="card">
+                <h2>Добавить тренировку</h2>
+                <div class="date-picker">
+                    <button class="date-btn" id="prev-date">←</button>
+                    <input type="date" id="workout-date" value="">
+                    <button class="date-btn" id="next-date">→</button>
+                </div>
+                <div id="exercises-container">
+                    <!-- Упражнения будут добавляться здесь -->
+                </div>
+                <button class="btn" id="add-exercise">Добавить упражнение</button>
+                <button class="btn btn-success" id="save-workout" style="margin-top: 15px; width: 100%;">Сохранить
+                    тренировку</button>
+            </div>
+        </div>
+
+        <!-- Страница 3: История тренировок -->
+        <div id="page-history" class="page">
+            <div class="card">
+                <h2>История тренировок</h2>
+                <div id="workouts-list">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница 4: Статистика -->
+        <div id="page-stats" class="page">
+            <div class="card">
+                <h2>Статистика</h2>
+                <div class="stats-controls">
+                    <select id="exercise-select">
+                        <option value="">Выберите упражнение</option>
+                    </select>
+                    <select id="months-select">
+                        <option value="3">3 месяца</option>
+                        <option value="6" selected>6 месяцев</option>
+                        <option value="12">12 месяцев</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progress-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница 5: Управление БД -->
+        <div id="page-db" class="page">
+            <div class="card">
+                <h2>Управление данными</h2>
+                <div class="db-actions">
+                    <button class="btn" id="export-data">Экспорт данных</button>
+                    <button class="btn" id="import-file">Импорт из файла</button>
+                    <button class="btn btn-danger" id="clear-data">Очистить все данные</button>
+                    <button class="btn" id="create-backup">Создать резервную копию</button>
+                </div>
+                <input type="file" id="file-input" class="hidden" accept=".json">
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div class="nav">
+            <a href="#" class="nav-item active" data-page="page-today">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                        d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V9h14v10zm0-12H5V5h14v2zm-7 4H7v5h5v-5z" />
+                </svg>
+                <span>Сегодня</span>
+            </a>
+            <a href="#" class="nav-item" data-page="page-add">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                </svg>
+                <span>Добавить</span>
+            </a>
+            <a href="#" class="nav-item" data-page="page-history">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                </svg>
+                <span>История</span>
+            </a>
+            <a href="#" class="nav-item" data-page="page-stats">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                        d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                </svg>
+                <span>Статистика</span>
+            </a>
+            <a href="#" class="nav-item" data-page="page-db">
+                <svg class="nav-icon" viewBox="0 0 24 24">
+                    <path
+                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 15.5h-1.5V14h-1v3H8v-3H7v4.5H5.5v-5c0-.55.45-1 1-1H11c.55 0 1 .45 1 1v5zm3.5 0H14v-6h3.5c.55 0 1 .45 1 1V16c0 .55-.45 1-1 1h-2v1.5zm-1-8c0 .55-.45 1-1 1H10V10h3V9h-2V8h2V7h-3V5.5h3.5c.55 0 1 .45 1 1v4zm1 3.5H17v1.5h-1.5z" />
+                </svg>
+                <span>Данные</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Константы и глобальные переменные
+        const DB_NAME = 'WorkoutTrackerDB';
+        const DB_VERSION = 1;
+        const EXERCISES = [
+            'Жим штанги лежа',
+            'Жим штанги узким хватом',
+            'Жим штанги сидя',
+            'Жим гантелей сидя'
+        ];
+        const WEIGHTS = [1.25, 2, 2.5, 5, 6, 8, 10, 12, 15, 20, 25, 30];
+        for (let i = 35; i <= 150; i += 5) WEIGHTS.push(i);
+        const REPS = [1, 2, 3, 4, 6, 8, 10, 12, 14, 16];
+        const SETS = [1, 2, 3, 4, 5, 6];
+
+        let db = null;
+        let dbReady = false;
+        let currentWorkout = {
+            date: new Date().toISOString().split('T')[0],
+            exercises: []
+        };
+        let progressChart = null;
+
+        // Инициализация приложения
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        function initApp() {
+            setupNavigation();
+            setupEventListeners();
+            setDefaultDate();
+            initDB().then(() => {
+                dbReady = true;
+                loadTodayWorkout();
+                loadWorkoutHistory();
+                populateExerciseSelect();
+            }).catch(error => {
+                console.error('Ошибка инициализации БД:', error);
+                document.getElementById('today-workout').innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+                document.getElementById('workouts-list').innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+            });
+        }
+
+        // Инициализация IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error('Ошибка открытия базы данных:', event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+
+                    // Создаем хранилище для тренировок
+                    if (!db.objectStoreNames.contains('workouts')) {
+                        const store = db.createObjectStore('workouts', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('date', 'date', { unique: false });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('База данных успешно открыта');
+                    resolve();
+                };
+            });
+        }
+
+        // Проверка готовности БД
+        function checkDB() {
+            if (!dbReady) {
+                throw new Error('База данных не готова');
+            }
+            return db;
+        }
+
+        // Настройка навигации
+        function setupNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    // Убираем активный класс у всех элементов
+                    navItems.forEach(navItem => {
+                        navItem.classList.remove('active');
+                    });
+
+                    // Добавляем активный класс текущему элементу
+                    item.classList.add('active');
+
+                    // Показываем соответствующую страницу
+                    const pageId = item.getAttribute('data-page');
+                    showPage(pageId);
+                });
+            });
+        }
+
+        // Показать страницу
+        function showPage(pageId) {
+            // Скрываем все страницы
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // Показываем выбранную страницу
+            document.getElementById(pageId).classList.add('active');
+
+            // Загружаем данные для страницы, если необходимо
+            if (pageId === 'page-history') {
+                loadWorkoutHistory();
+            } else if (pageId === 'page-stats') {
+                // При показе страницы статистики обновляем график
+                updateChart();
+            }
+        }
+
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Кнопка добавления упражнения
+            document.getElementById('add-exercise').addEventListener('click', addExerciseUI);
+
+            // Кнопка сохранения тренировки
+            document.getElementById('save-workout').addEventListener('click', saveWorkout);
+
+            // Выбор даты тренировки
+            document.getElementById('workout-date').addEventListener('change', (e) => {
+                currentWorkout.date = e.target.value;
+            });
+
+            // Кнопки навигации по датам
+            document.getElementById('prev-date').addEventListener('click', () => {
+                changeDate(-1);
+            });
+
+            document.getElementById('next-date').addEventListener('click', () => {
+                changeDate(1);
+            });
+
+            // Выбор упражнения для статистики
+            document.getElementById('exercise-select').addEventListener('change', updateChart);
+
+            // Выбор периода для статистики
+            document.getElementById('months-select').addEventListener('change', updateChart);
+
+            // Управление базой данных
+            document.getElementById('export-data').addEventListener('click', exportData);
+            document.getElementById('import-file').addEventListener('click', () => {
+                document.getElementById('file-input').click();
+            });
+            document.getElementById('file-input').addEventListener('change', importData);
+            document.getElementById('clear-data').addEventListener('click', clearData);
+            document.getElementById('create-backup').addEventListener('click', createBackup);
+        }
+
+        // Установка даты по умолчанию
+        function setDefaultDate() {
+            const dateInput = document.getElementById('workout-date');
+            dateInput.value = currentWorkout.date;
+        }
+
+        // Изменение даты
+        function changeDate(days) {
+            const dateInput = document.getElementById('workout-date');
+            const currentDate = new Date(dateInput.value);
+            currentDate.setDate(currentDate.getDate() + days);
+
+            const newDate = currentDate.toISOString().split('T')[0];
+            dateInput.value = newDate;
+            currentWorkout.date = newDate;
+        }
+
+        // Добавление UI для упражнения
+        function addExerciseUI() {
+            const exercisesContainer = document.getElementById('exercises-container');
+
+            const exerciseIndex = currentWorkout.exercises.length;
+            currentWorkout.exercises.push({
+                name: '',
+                sets: []
+            });
+
+            const exerciseDiv = document.createElement('div');
+            exerciseDiv.className = 'exercise-item';
+            exerciseDiv.innerHTML = `
+                <h3>Упражнение ${exerciseIndex + 1}</h3>
+                <select class="exercise-select" data-index="${exerciseIndex}">
+                    <option value="">Выберите упражнение</option>
+                    ${EXERCISES.map(ex => `<option value="${ex}">${ex}</option>`).join('')}
+                </select>
+                <div class="sets-container" data-index="${exerciseIndex}">
+                    <!-- Сеты будут добавляться здесь -->
+                </div>
+                <button class="btn add-set" data-index="${exerciseIndex}" style="margin-top: 10px;">Добавить подход</button>
+                <button class="btn btn-danger remove-exercise" data-index="${exerciseIndex}" style="margin-top: 10px; margin-left: 10px;">Удалить упражнение</button>
+            `;
+
+            exercisesContainer.appendChild(exerciseDiv);
+
+            // Назначение обработчиков событий
+            exerciseDiv.querySelector('.exercise-select').addEventListener('change', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                currentWorkout.exercises[index].name = e.target.value;
+            });
+
+            exerciseDiv.querySelector('.add-set').addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                addSetUI(index);
+            });
+
+            exerciseDiv.querySelector('.remove-exercise').addEventListener('click', (e) => {
+                const index = parseInt(e.target.getAttribute('data-index'));
+                exercisesContainer.removeChild(exerciseDiv);
+                currentWorkout.exercises.splice(index, 1);
+
+                // Обновляем индексы у оставшихся упражнений
+                document.querySelectorAll('.exercise-item').forEach((item, i) => {
+                    item.querySelector('h3').textContent = `Упражнение ${i + 1}`;
+                    const select = item.querySelector('.exercise-select');
+                    select.setAttribute('data-index', i);
+                    select.value = currentWorkout.exercises[i].name;
+
+                    const setsContainer = item.querySelector('.sets-container');
+                    setsContainer.setAttribute('data-index', i);
+
+                    const addSetBtn = item.querySelector('.add-set');
+                    addSetBtn.setAttribute('data-index', i);
+
+                    const removeBtn = item.querySelector('.remove-exercise');
+                    removeBtn.setAttribute('data-index', i);
+                });
+            });
+        }
+
+        // Добавление UI для подхода
+        function addSetUI(exerciseIndex) {
+            const setsContainer = document.querySelector(`.sets-container[data-index="${exerciseIndex}"]`);
+            const setIndex = currentWorkout.exercises[exerciseIndex].sets.length;
+
+            currentWorkout.exercises[exerciseIndex].sets.push({
+                weight: 0,
+                reps: 0,
+                sets: 1
+            });
+
+            const setDiv = document.createElement('div');
+            setDiv.className = 'set-item';
+            setDiv.innerHTML = `
+                <div class="set-controls">
+                    <select class="weight-select" data-exercise="${exerciseIndex}" data-set="${setIndex}">
+                        <option value="">Вес (кг)</option>
+                        ${WEIGHTS.map(w => `<option value="${w}">${w}</option>`).join('')}
+                    </select>
+                    <select class="reps-select" data-exercise="${exerciseIndex}" data-set="${setIndex}">
+                        <option value="">Повторения</option>
+                        ${REPS.map(r => `<option value="${r}">${r}</option>`).join('')}
+                    </select>
+                    <select class="sets-select" data-exercise="${exerciseIndex}" data-set="${setIndex}">
+                        <option value="">Подходы</option>
+                        ${SETS.map(s => `<option value="${s}">${s}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-danger remove-set" data-exercise="${exerciseIndex}" data-set="${setIndex}">×</button>
+                </div>
+            `;
+
+            setsContainer.appendChild(setDiv);
+
+            // Назначение обработчиков событий
+            setDiv.querySelector('.weight-select').addEventListener('change', (e) => {
+                const exIndex = parseInt(e.target.getAttribute('data-exercise'));
+                const sIndex = parseInt(e.target.getAttribute('data-set'));
+                currentWorkout.exercises[exIndex].sets[sIndex].weight = parseFloat(e.target.value);
+            });
+
+            setDiv.querySelector('.reps-select').addEventListener('change', (e) => {
+                const exIndex = parseInt(e.target.getAttribute('data-exercise'));
+                const sIndex = parseInt(e.target.getAttribute('data-set'));
+                currentWorkout.exercises[exIndex].sets[sIndex].reps = parseInt(e.target.value);
+            });
+
+            setDiv.querySelector('.sets-select').addEventListener('change', (e) => {
+                const exIndex = parseInt(e.target.getAttribute('data-exercise'));
+                const sIndex = parseInt(e.target.getAttribute('data-set'));
+                currentWorkout.exercises[exIndex].sets[sIndex].sets = parseInt(e.target.value);
+            });
+
+            setDiv.querySelector('.remove-set').addEventListener('click', (e) => {
+                const exIndex = parseInt(e.target.getAttribute('data-exercise'));
+                const sIndex = parseInt(e.target.getAttribute('data-set'));
+                setsContainer.removeChild(setDiv);
+                currentWorkout.exercises[exIndex].sets.splice(sIndex, 1);
+
+                // Обновляем индексы у оставшихся подходов
+                document.querySelectorAll(`.sets-container[data-index="${exIndex}"] .set-item`).forEach((item, i) => {
+                    const weightSelect = item.querySelector('.weight-select');
+                    weightSelect.setAttribute('data-set', i);
+
+                    const repsSelect = item.querySelector('.reps-select');
+                    repsSelect.setAttribute('data-set', i);
+
+                    const setsSelect = item.querySelector('.sets-select');
+                    setsSelect.setAttribute('data-set', i);
+
+                    const removeBtn = item.querySelector('.remove-set');
+                    removeBtn.setAttribute('data-set', i);
+                });
+            });
+        }
+
+        // Сохранение тренировки
+        function saveWorkout() {
+            // Проверяем, что все поля заполнены
+            let isValid = true;
+
+            currentWorkout.exercises.forEach((exercise, exIndex) => {
+                if (!exercise.name) {
+                    isValid = false;
+                    alert('Пожалуйста, выберите упражнение для всех добавленных упражнений');
+                    return;
+                }
+
+                exercise.sets.forEach((set, setIndex) => {
+                    if (!set.weight || !set.reps || !set.sets) {
+                        isValid = false;
+                        alert('Пожалуйста, заполните все поля для подходов');
+                        return;
+                    }
+                });
+            });
+
+            if (!isValid) return;
+
+            try {
+                // Сохраняем тренировку в IndexedDB
+                const transaction = checkDB().transaction(['workouts'], 'readwrite');
+                const store = transaction.objectStore('workouts');
+
+                const request = store.add({
+                    date: currentWorkout.date,
+                    exercises: currentWorkout.exercises
+                });
+
+                request.onsuccess = () => {
+                    alert('Тренировка успешно сохранена!');
+
+                    // Очищаем форму
+                    document.getElementById('exercises-container').innerHTML = '';
+                    currentWorkout = {
+                        date: new Date().toISOString().split('T')[0],
+                        exercises: []
+                    };
+                    setDefaultDate();
+
+                    // Обновляем другие страницы
+                    loadTodayWorkout();
+                    loadWorkoutHistory();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Ошибка сохранения тренировки:', event.target.error);
+                    alert('Произошла ошибка при сохранении тренировки');
+                };
+            } catch (error) {
+                console.error('Ошибка доступа к БД:', error);
+                alert('База данных не доступна. Попробуйте перезагрузить страницу.');
+            }
+        }
+
+        // Загрузка тренировки на сегодня
+        function loadTodayWorkout() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const transaction = checkDB().transaction(['workouts'], 'readonly');
+                const store = transaction.objectStore('workouts');
+                const index = store.index('date');
+                const request = index.getAll(today);
+
+                request.onsuccess = () => {
+                    const todayWorkoutContainer = document.getElementById('today-workout');
+                    todayWorkoutContainer.innerHTML = '';
+
+                    if (request.result.length > 0) {
+                        const workout = request.result[0];
+
+                        workout.exercises.forEach(exercise => {
+                            const exerciseDiv = document.createElement('div');
+                            exerciseDiv.className = 'exercise-item';
+
+                            let setsHTML = '';
+                            exercise.sets.forEach(set => {
+                                setsHTML += `
+                                    <div class="set-display">
+                                        <span>${set.weight}кг / ${set.reps}</span>
+                                        <span>${set.sets} подход(а)</span>
+                                    </div>
+                                `;
+                            });
+
+                            exerciseDiv.innerHTML = `
+                                <h3>${exercise.name}</h3>
+                                ${setsHTML}
+                            `;
+
+                            todayWorkoutContainer.appendChild(exerciseDiv);
+                        });
+                    } else {
+                        todayWorkoutContainer.innerHTML = '<div class="empty-state">На сегодня тренировок не запланировано</div>';
+                    }
+                };
+
+                request.onerror = (event) => {
+                    console.error('Ошибка загрузки тренировок:', event.target.error);
+                    document.getElementById('today-workout').innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+                };
+            } catch (error) {
+                console.error('Ошибка доступа к БД:', error);
+                document.getElementById('today-workout').innerHTML = '<div class="empty-state">База данных не доступна</div>';
+            }
+        }
+
+        // Загрузка истории тренировок
+        function loadWorkoutHistory() {
+            try {
+                const transaction = checkDB().transaction(['workouts'], 'readonly');
+                const store = transaction.objectStore('workouts');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const workoutsList = document.getElementById('workouts-list');
+                    workoutsList.innerHTML = '';
+
+                    if (request.result.length > 0) {
+                        // Группируем тренировки по дате
+                        const workoutsByDate = {};
+
+                        request.result.forEach(workout => {
+                            if (!workoutsByDate[workout.date]) {
+                                workoutsByDate[workout.date] = [];
+                            }
+                            workoutsByDate[workout.date].push(workout);
+                        });
+
+                        // Сортируем даты в обратном порядке
+                        const sortedDates = Object.keys(workoutsByDate).sort().reverse();
+
+                        sortedDates.forEach(date => {
+                            const dateDiv = document.createElement('div');
+                            dateDiv.className = 'workout-date';
+
+                            const dateHeader = document.createElement('h3');
+                            dateHeader.textContent = formatDate(date);
+                            dateDiv.appendChild(dateHeader);
+
+                            workoutsByDate[date].forEach(workout => {
+                                const workoutDiv = document.createElement('div');
+                                workoutDiv.className = 'workout-item';
+
+                                let exercisesHTML = '';
+                                workout.exercises.forEach(exercise => {
+                                    let setsHTML = '';
+                                    exercise.sets.forEach(set => {
+                                        setsHTML += `<div>${set.weight}кг / ${set.reps} - ${set.sets} подход(а)</div>`;
+                                    });
+
+                                    exercisesHTML += `
+                                        <div class="exercise-item">
+                                            <h4>${exercise.name}</h4>
+                                            ${setsHTML}
+                                        </div>
+                                    `;
+                                });
+
+                                workoutDiv.innerHTML = exercisesHTML;
+                                dateDiv.appendChild(workoutDiv);
+                            });
+
+                            workoutsList.appendChild(dateDiv);
+                        });
+                    } else {
+                        workoutsList.innerHTML = '<div class="empty-state">Нет сохраненных тренировок</div>';
+                    }
+                };
+
+                request.onerror = (event) => {
+                    console.error('Ошибка загрузки истории тренировок:', event.target.error);
+                    document.getElementById('workouts-list').innerHTML = '<div class="empty-state">Ошибка загрузки данных</div>';
+                };
+            } catch (error) {
+                console.error('Ошибка доступа к БД:', error);
+                document.getElementById('workouts-list').innerHTML = '<div class="empty-state">База данных не доступна</div>';
+            }
+        }
+
+        // Заполнение выпадающего списка упражнений для статистики
+        function populateExerciseSelect() {
+            const exerciseSelect = document.getElementById('exercise-select');
+
+            // Очищаем существующие options, кроме первого
+            while (exerciseSelect.options.length > 1) {
+                exerciseSelect.remove(1);
+            }
+
+            // Добавляем упражнения
+            EXERCISES.forEach(exercise => {
+                const option = document.createElement('option');
+                option.value = exercise;
+                option.textContent = exercise;
+                exerciseSelect.appendChild(option);
+            });
+        }
+
+        // Обновление графика прогресса
+        function updateChart() {
+            const exerciseName = document.getElementById('exercise-select').value;
+            const months = parseInt(document.getElementById('months-select').value);
+
+            if (!exerciseName) {
+                // Очищаем график, если упражнение не выбрано
+                const ctx = document.getElementById('progress-chart').getContext('2d');
+                if (progressChart) {
+                    progressChart.destroy();
+                    progressChart = null;
+                }
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#777';
+                ctx.textAlign = 'center';
+                ctx.fillText('Выберите упражнение для отображения статистики', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            try {
+                // Получаем данные для графика
+                getExerciseProgressData(exerciseName, months).then(data => {
+                    renderProgressChart(data, exerciseName);
+                }).catch(error => {
+                    console.error('Ошибка получения данных для графика:', error);
+                });
+            } catch (error) {
+                console.error('Ошибка доступа к БД:', error);
+            }
+        }
+
+        // Получение данных для графика прогресса
+        function getExerciseProgressData(exerciseName, months) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const transaction = checkDB().transaction(['workouts'], 'readonly');
+                    const store = transaction.objectStore('workouts');
+                    const request = store.getAll();
+
+                    request.onsuccess = () => {
+                        const result = [];
+                        const now = new Date();
+                        const cutoffDate = new Date();
+                        cutoffDate.setMonth(now.getMonth() - months);
+
+                        request.result.forEach(workout => {
+                            const workoutDate = new Date(workout.date);
+                            if (workoutDate >= cutoffDate) {
+                                workout.exercises.forEach(exercise => {
+                                    if (exercise.name === exerciseName) {
+                                        // Находим максимальный вес в этом упражнении за эту тренировку
+                                        let maxWeight = 0;
+                                        exercise.sets.forEach(set => {
+                                            if (set.weight > maxWeight) {
+                                                maxWeight = set.weight;
+                                            }
+                                        });
+
+                                        if (maxWeight > 0) {
+                                            result.push({
+                                                date: workout.date,
+                                                weight: maxWeight
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                        // Сортируем по дате
+                        result.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                        resolve(result);
+                    };
+
+                    request.onerror = (event) => {
+                        reject(event.target.error);
+                    };
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        }
+
+        // Отрисовка графика прогресса
+        function renderProgressChart(data, exerciseName) {
+            const ctx = document.getElementById('progress-chart').getContext('2d');
+
+            // Уничтожаем предыдущий график, если он существует
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            if (data.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.font = '16px Arial';
+                ctx.fillStyle = '#777';
+                ctx.textAlign = 'center';
+                ctx.fillText('Нет данных для отображения', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+
+            const labels = data.map(item => formatDate(item.date));
+            const weights = data.map(item => item.weight);
+
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Макс. вес в ${exerciseName} (кг)`,
+                        data: weights,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Вес (кг)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Дата'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Экспорт данных
+        function exportData() {
+            try {
+                const transaction = checkDB().transaction(['workouts'], 'readonly');
+                const store = transaction.objectStore('workouts');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const data = JSON.stringify(request.result, null, 2);
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'workout-data.json';
+                    a.click();
+
+                    URL.revokeObjectURL(url);
+                };
+            } catch (error) {
+                console.error('Ошибка экспорта данных:', error);
+                alert('Ошибка экспорта данных');
+            }
+        }
+
+        // Импорт данных
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    if (Array.isArray(data)) {
+                        const transaction = checkDB().transaction(['workouts'], 'readwrite');
+                        const store = transaction.objectStore('workouts');
+
+                        // Очищаем существующие данные
+                        store.clear();
+
+                        // Добавляем новые данные
+                        data.forEach(workout => {
+                            store.add(workout);
+                        });
+
+                        transaction.oncomplete = () => {
+                            alert('Данные успешно импортированы!');
+                            loadTodayWorkout();
+                            loadWorkoutHistory();
+                            updateChart();
+                        };
+
+                        transaction.onerror = () => {
+                            alert('Произошла ошибка при импорте данных');
+                        };
+                    } else {
+                        alert('Некорректный формат данных');
+                    }
+                } catch (error) {
+                    console.error('Ошибка импорта данных:', error);
+                    alert('Произошла ошибка при импорте данных');
+                }
+            };
+
+            reader.readAsText(file);
+            event.target.value = ''; // Сбрасываем значение input
+        }
+
+        // Очистка всех данных
+        function clearData() {
+            if (confirm('Вы уверены, что хотите удалить все данные? Это действие нельзя отменить.')) {
+                try {
+                    const transaction = checkDB().transaction(['workouts'], 'readwrite');
+                    const store = transaction.objectStore('workouts');
+                    const request = store.clear();
+
+                    request.onsuccess = () => {
+                        alert('Все данные успешно удалены');
+                        loadTodayWorkout();
+                        loadWorkoutHistory();
+                        updateChart();
+                    };
+
+                    request.onerror = () => {
+                        alert('Произошла ошибка при удалении данных');
+                    };
+                } catch (error) {
+                    console.error('Ошибка очистки данных:', error);
+                    alert('Ошибка очистки данных');
+                }
+            }
+        }
+
+        // Создание резервной копии
+        function createBackup() {
+            exportData(); // В данном случае просто экспортируем данные
+        }
+
+        // Форматирование даты
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        // Регистрация Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Отслеживание установки PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('Приложение можно установить');
+
+            // Можно показать кнопку установки
+            // showInstallPrompt();
+        });
+
+        function showInstallPrompt() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('Пользователь установил приложение');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>
