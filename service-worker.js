@@ -1,4 +1,4 @@
-const CACHE_NAME = 'workout-tracker-v3';
+const CACHE_NAME = 'workout-tracker-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -10,7 +10,6 @@ const urlsToCache = [
 
 // Установка Service Worker
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Принудительная активация нового SW
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
