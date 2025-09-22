@@ -10,6 +10,7 @@ const urlsToCache = [
 
 // Установка Service Worker
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Принудительная активация нового SW
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
