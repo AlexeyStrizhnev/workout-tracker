@@ -526,6 +526,91 @@
                 justify-content: center;
             }
         }
+
+        /* Стили для компактного выбора подхода */
+        .set-controls-compact {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .set-picker-group {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .set-picker {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .set-picker label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: 500;
+        }
+
+        .picker-container {
+            position: relative;
+        }
+
+        .set-picker select {
+            width: 100%;
+            padding: 10px 8px;
+            margin-bottom: 0;
+            font-size: 0.9rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            padding-right: 30px;
+        }
+
+        /* Улучшенный внешний вид для мобильных устройств */
+        @media (max-width: 768px) {
+            .set-picker-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .set-controls-compact {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .set-picker {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .set-picker label {
+                min-width: 80px;
+                margin-bottom: 0;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Анимация при выборе */
+        .set-picker select:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+        }
+
+        /* Стили для состояний */
+        .set-picker select:valid {
+            border-color: var(--primary-color);
+            background-color: rgba(52, 39, 174, 0.05);
+        }
+
+        .set-picker select:invalid {
+            border-color: var(--border-color);
+        }
     </style>
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -750,8 +835,8 @@
         ];
         const WEIGHTS = [0, 1.25, 2, 2.5, 5, 6, 8, 10, 12, 15, 20, 25, 30];
         for (let i = 35; i <= 150; i += 5) WEIGHTS.push(i);
-        const REPS = [1, 2, 3, 4, 6, 8, 10, 12, 14, 16];
-        const SETS = [1, 2, 3, 4, 5, 6];
+        const REPS = [1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20];
+        const SETS = [1, 2, 3, 4, 5, 6, 7];
 
         let db = null;
         let dbReady = false;
@@ -1136,26 +1221,45 @@
             const setDiv = document.createElement('div');
             setDiv.className = 'set-item';
             setDiv.innerHTML = `
-                <div class="set-controls">
-                    <select class="set-weight">
-                        <option value="">Вес</option>
-                        ${WEIGHTS.map(w => `<option value="${w}">${w} кг</option>`).join('')}
-                    </select>
-                    <select class="set-reps">
-                        <option value="">Повторения</option>
-                        ${REPS.map(r => `<option value="${r}">${r}</option>`).join('')}
-                    </select>
-                    <select class="set-count">
-                        <option value="">Подходы</option>
-                        ${SETS.map(s => `<option value="${s}">${s}</option>`).join('')}
-                    </select>
-                    <button class="icon-btn remove-set">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                    </button>
+        <div class="set-controls-compact">
+            <div class="set-picker-group">
+                <div class="set-picker">
+                    <label>Вес</label>
+                    <div class="picker-container">
+                        <select class="set-weight">
+                            <option value="">Выберите вес</option>
+                            ${WEIGHTS.map(w => `<option value="${w}">${w} кг</option>`).join('')}
+                        </select>
+                    </div>
                 </div>
-            `;
+
+                <div class="set-picker">
+                    <label>Повторения</label>
+                    <div class="picker-container">
+                        <select class="set-reps">
+                            <option value="">Выберите повторения</option>
+                            ${REPS.map(r => `<option value="${r}">${r}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="set-picker">
+                    <label>Подходы</label>
+                    <div class="picker-container">
+                        <select class="set-count">
+                            <option value="">Выберите подходы</option>
+                            ${SETS.map(s => `<option value="${s}">${s}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <button class="icon-btn remove-set">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+            </button>
+        </div>
+    `;
 
             setsContainer.appendChild(setDiv);
 
