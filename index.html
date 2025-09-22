@@ -1277,7 +1277,7 @@
                     <div class="picker-container">
                         <select class="set-weight">
                             <option value="">Выберите вес</option>
-                            ${WEIGHTS.map(w => `<option value="${w}">${w} кг</option>`).join('')}
+                            ${WEIGHTS.map(w => `<option value="${w}">${w === 0 ? 'собственный вес' : `${w} кг`}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -1334,8 +1334,13 @@
                 const reps = parseInt(setElement.querySelector('.set-reps').value);
                 const count = parseInt(setElement.querySelector('.set-count').value);
 
-                if (weight && reps && count) {
-                    sets.push({ weight, reps, count });
+                // Разрешаем вес = 0 (собственный вес) или любое число
+                if (weight !== '' && !isNaN(reps) && !isNaN(count) && reps > 0 && count > 0) {
+                    sets.push({
+                        weight: weight === '' ? 0 : parseFloat(weight),
+                        reps: reps,
+                        count: count
+                    });
                 }
             });
 
@@ -1361,7 +1366,7 @@
                     <div class="exercise-details">
                         ${sets.map(set => `
                             <div class="set-display">
-                                <span>${set.weight}кг × ${set.reps} повторений</span>
+                                <span>${set.weight == 0 ? 'Собственный вес' : set.weight + 'кг'} × ${set.reps} повт.</span>
                                 <span>${set.count} подходов</span>
                             </div>
                         `).join('')}
@@ -1548,19 +1553,38 @@
                 <div class="sets-container" data-index="${exerciseIndex}">
                     ${sets.map((set, setIndex) => `
                         <div class="set-item">
-                            <div class="set-controls">
-                                <select class="set-weight">
-                                    <option value="">Вес</option>
-                                    ${WEIGHTS.map(w => `<option value="${w}" ${w === set.weight ? 'selected' : ''}>${w} кг</option>`).join('')}
-                                </select>
-                                <select class="set-reps">
-                                    <option value="">Повторения</option>
-                                    ${REPS.map(r => `<option value="${r}" ${r === set.reps ? 'selected' : ''}>${r}</option>`).join('')}
-                                </select>
-                                <select class="set-count">
-                                    <option value="">Подходы</option>
-                                    ${SETS.map(s => `<option value="${s}" ${s === set.count ? 'selected' : ''}>${s}</option>`).join('')}
-                                </select>
+                            <div class="set-controls-compact">
+                                <div class="set-picker-group">
+                                    <div class="set-picker">
+                                        <label>Вес</label>
+                                        <div class="picker-container">
+                                            <select class="set-weight">
+                                                <option value="">Выберите вес</option>
+                                                ${WEIGHTS.map(w => `<option value="${w}" ${w == set.weight ? 'selected' : ''}>${w} ${w ? 'кг' : 'собственный вес'}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="set-picker">
+                                        <label>Повторения</label>
+                                        <div class="picker-container">
+                                            <select class="set-reps">
+                                                <option value="">Выберите повторения</option>
+                                                ${REPS.map(r => `<option value="${r}" ${r == set.reps ? 'selected' : ''}>${r}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="set-picker">
+                                        <label>Подходы</label>
+                                        <div class="picker-container">
+                                            <select class="set-count">
+                                                <option value="">Выберите подходы</option>
+                                                ${SETS.map(s => `<option value="${s}" ${s == set.count ? 'selected' : ''}>${s}</option>`).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                                 <button class="icon-btn remove-set">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -1650,7 +1674,7 @@
                         <div class="exercise-details">
                             ${exercise.sets.map(set => `
                                 <div class="set-display">
-                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                    <span>${set.weight == 0 ? 'Собственный вес' : set.weight + 'кг'} × ${set.reps} повт.</span>
                                     <span>${set.count} подходов</span>
                                 </div>
                             `).join('')}
@@ -1759,7 +1783,7 @@
                                         <div class="exercise-details">
                                             ${exercise.sets.map(set => `
                                                 <div class="set-display">
-                                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                                    <span>${set.weight == 0 ? 'Собственный вес' : set.weight + 'кг'} × ${set.reps} повт.</span>
                                                     <span>${set.count} подходов</span>
                                                 </div>
                                             `).join('')}
@@ -1863,7 +1887,7 @@
                                         <div class="exercise-details">
                                             ${exercise.sets.map(set => `
                                                 <div class="set-display">
-                                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                                    <span>${set.weight == 0 ? 'Собственный вес' : set.weight + 'кг'} × ${set.reps} повт.</span>
                                                     <span>${set.count} подходов</span>
                                                 </div>
                                             `).join('')}
@@ -2011,12 +2035,18 @@
                     filteredWorkouts.forEach(workout => {
                         workout.exercises.forEach(exercise => {
                             if (exercise.name === selectedExercise) {
-                                const maxWeight = Math.max(...exercise.sets.map(set => parseFloat(set.weight)));
-                                exerciseData.push({
-                                    date: workout.date,
-                                    weight: maxWeight,
-                                    sets: exercise.sets
-                                });
+                                const validWeights = exercise.sets
+                                    .map(set => parseFloat(set.weight))
+                                    .filter(weight => !isNaN(weight) && weight > 0); // Исключаем 0 и NaN
+
+                                if (validWeights.length > 0) {
+                                    const maxWeight = Math.max(...validWeights);
+                                    exerciseData.push({
+                                        date: workout.date,
+                                        weight: maxWeight,
+                                        sets: exercise.sets
+                                    });
+                                }
                             }
                         });
                     });
