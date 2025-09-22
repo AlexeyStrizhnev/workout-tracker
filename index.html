@@ -611,6 +611,55 @@
         .set-picker select:invalid {
             border-color: var(--border-color);
         }
+
+        .exercise-details {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .set-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .set-display:last-child {
+            margin-bottom: 0;
+        }
+
+        .set-display span {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .set-display span:first-child {
+            color: var(--secondary-color);
+        }
+
+        .set-display span:last-child {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Адаптивность для мобильных */
+        @media (max-width: 480px) {
+            .set-display {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .set-display span:last-child {
+                align-self: flex-end;
+                font-size: 0.85rem;
+            }
+        }
     </style>
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -1310,7 +1359,12 @@
                         </button>
                     </div>
                     <div class="exercise-details">
-                        ${sets.map(set => `${set.weight}кг на ${set.count} раз(а) / ${set.reps} подх.`).join(', ')}
+                        ${sets.map(set => `
+                            <div class="set-display">
+                                <span>${set.weight}кг × ${set.reps} повторений</span>
+                                <span>${set.count} подходов</span>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `;
@@ -1594,7 +1648,12 @@
                             </button>
                         </div>
                         <div class="exercise-details">
-                            ${exercise.sets.map(set => `${set.weight}кг на ${set.count} раз(а) / ${set.reps} подх.`).join(', ')}
+                            ${exercise.sets.map(set => `
+                                <div class="set-display">
+                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                    <span>${set.count} подходов</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 `;
@@ -1698,7 +1757,12 @@
                                     <div class="exercise-summary">
                                         <h4>${exercise.name}</h4>
                                         <div class="exercise-details">
-                                            ${exercise.sets.map(set => `${set.weight}кг на ${set.count} раз(а) / ${set.reps} подх.`).join(', ')}
+                                            ${exercise.sets.map(set => `
+                                                <div class="set-display">
+                                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                                    <span>${set.count} подходов</span>
+                                                </div>
+                                            `).join('')}
                                         </div>
                                     </div>
                                 `).join('')}
@@ -1797,7 +1861,12 @@
                                     <div class="exercise-summary">
                                         <h4>${exercise.name}</h4>
                                         <div class="exercise-details">
-                                            ${exercise.sets.map(set => `${set.weight}кг на ${set.count} раз(а) / ${set.reps} подх.`).join(', ')}
+                                            ${exercise.sets.map(set => `
+                                                <div class="set-display">
+                                                    <span>${set.weight}кг × ${set.reps} повторений</span>
+                                                    <span>${set.count} подходов</span>
+                                                </div>
+                                            `).join('')}
                                         </div>
                                     </div>
                                 `).join('')}
